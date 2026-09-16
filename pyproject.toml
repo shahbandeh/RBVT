@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rbvt"
+version = "0.1.0"
+description = "Roman Background Visualization Tool"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+dependencies = ["numpy>=1.24", "scipy>=1.10", "astropy>=5.2", "pandas>=2.0", "healpy>=1.16", "matplotlib>=3.7", "bokeh>=3.3"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+rbvt = "rbvt.cli:main"
+roman_bvt = "rbvt.cli:main"
+
+[project.urls]
+Repository = "https://github.com/shahbandeh/RBVT"
+
+[tool.setuptools.packages.find]
+include = ["rbvt*"]
+
+[tool.setuptools.package-data]
+rbvt = ["refdata/*.txt", "refdata/*.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
