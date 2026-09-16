@@ -96,3 +96,24 @@ def test_viewer(offline):
     sliders['Calendar Day'].value = 0
     doc.validate()
     doc.to_json()
+
+
+@pytest.mark.parametrize("port", [5006, 5007])
+def test_interactive_local_origins(monkeypatch, port):
+    from unittest.mock import MagicMock
+    from rbvt.cli import build_parser, serve
+    import bokeh.server.server
+    factory = MagicMock()
+    monkeypatch.setattr(bokeh.server.server, "Server", factory)
+    args = build_parser().parse_args([
+        "--ra", "180", "--dec", "0", "--interactive",
+        "--no-browser", "--port", str(port),
+    ])
+    assert serve(args, parse_target("180", "0", "equatorial")) == 0
+    options = factory.call_args.kwargs
+    assert options["address"] == "127.0.0.1"
+    assert options["port"] == port
+    assert set(options["allow_websocket_origin"]) == {
+        f"127.0.0.1:{port}", f"localhost:{port}",
+    }
+    factory.return_value.stop.assert_called_once()

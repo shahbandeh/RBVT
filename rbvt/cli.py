@@ -100,7 +100,10 @@ def serve(args, target):
         plot_rbt(doc, ra=target.ra.deg, dec=target.dec.deg,
                  default_filter=args.filter or "F184", thresh=args.threshold,
                  thisday=args.day if args.day is not None else 100)
-    server = Server({'/': app}, address="127.0.0.1", port=args.port)
+    server = Server(
+        {'/': app}, address="127.0.0.1", port=args.port,
+        allow_websocket_origin=[f"127.0.0.1:{args.port}", f"localhost:{args.port}"],
+    )
     server.start()
     print(f"RBVT viewer: http://127.0.0.1:{args.port}/ (Ctrl+C to stop)")
     if not args.no_browser:
