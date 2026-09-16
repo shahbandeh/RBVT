@@ -52,9 +52,13 @@ def summary(result, day, name=None):
             f"Background cache version: {result.cache_version}")
 
 
-def plot_background(result, day, name=None):
-    import matplotlib.pyplot as plt
-    fig, axes = plt.subplots(1, 2, figsize=(13, 5), constrained_layout=True)
+def plot_background(result, day, name=None, figure=None):
+    if figure is None:
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(1, 2, figsize=(13, 5), constrained_layout=True)
+    else:
+        fig = figure
+        axes = fig.subplots(1, 2)
     tables = [daily_table(result).set_index('day').reindex(range(366)), spectrum_table(result, day).set_index('wavelength_um')]
     for ax, table in zip(axes, tables):
         for column, label, color in [('total_MJy_sr', 'Total', 'black'), ('zodi_MJy_sr', 'Zodi', 'orange'), ('thermal_MJy_sr', 'Thermal', 'red'), ('ism_cib_MJy_sr', 'ISM+CIB', 'blue')]:
@@ -82,11 +86,23 @@ def render_products(result, day, args):
         if args.write_report:
             data = io.BytesIO()
             fig.savefig(data, format='png', dpi=150)
-            encoded = base64.b64encode(data.getvalue()).decode('ascii')
-            title = html.escape(args.target_name or 'Roman Background Visualization Tool')
-            report = f'<!doctype html><html lang="en"><meta charset="utf-8"><title>{title}</title><h1>{title}</h1><pre>{html.escape(summary(result, day, args.target_name))}</pre><img style="max-width:100%" alt="Daily background and spectrum" src="data:image/png;base64,{encoded}"><p>Monochromatic backgrounds; filter names denote representative wavelengths. Gaps indicate unavailable or unobservable days. Visibility uses the original 2024 reference year.</p></html>'
-            output_path(args.write_report).write_text(report, encoding='utf-8')
+            output_path(args.write_report).write_text(
+                report_html(result, day, args.target_name, data.getvalue()), encoding='utf-8'
+            )
         if args.show_plot:
             plt.show()
     finally:
         plt.close(fig)
+
+
+def report_html(result, day, name, png):
+    """Build the same self-contained report for CLI, desktop, and web exports."""
+    encoded = base64.b64encode(png).decode('ascii')
+    title = html.escape(name or 'Roman Background Visualization Tool')
+    return (f'<!doctype html><html lang="en"><meta charset="utf-8"><title>{title}</title>'
+            f'<h1>{title}</h1><pre>{html.escape(summary(result, day, name))}</pre>'
+            f'<img style="max-width:100%" alt="Daily background and spectrum" '
+            f'src="data:image/png;base64,{encoded}">'
+            '<p>Monochromatic backgrounds; filter names denote representative wavelengths. '
+            'Gaps indicate unavailable or unobservable days. Visibility uses the original '
+            '2024 reference year.</p></html>')

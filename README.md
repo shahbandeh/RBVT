@@ -76,6 +76,61 @@ files to the terminal’s working directory. If the initial day is unavailable,
 the viewer selects a visible day, as in the original notebook. Interactive mode
 uses filter selections; run custom-wavelength calculations and file exports separately.
 
+## Desktop GUI
+
+Install the package, then open a native desktop window:
+
+```bash
+python -m pip install -e .
+rbvt-gui
+```
+
+The desktop GUI includes coordinate and optical-element inputs, a custom-wavelength
+option, a threshold control, background and spectrum plots with zoom/pan controls,
+a selector containing available spectrum days, daily and spectrum tables, and
+CSV/PNG/HTML export dialogs. Copy CLI Command copies the equivalent command for
+the displayed result. Downloads run in a background thread so the window stays
+responsive. Editing inputs does not change the displayed calculation until you
+press Calculate background.
+
+Python must include Tk support and have access to a desktop display. On Linux,
+install your distribution's `python3-tk` package if Tk is absent. Standard python.org
+macOS/Windows installers include Tk. The GUI requires no Streamlit installation.
+
+## Streamlit app
+
+From the repository, install the web extra into your active environment:
+
+```bash
+python -m pip install -e ".[web]"
+rbvt-web
+```
+
+Or launch with Streamlit directly:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+For a different port or a server without a browser:
+
+```bash
+rbvt-web --server.port 8502 --server.headless true
+```
+
+The app provides coordinate inputs, optical-element/custom-wavelength selection,
+thresholds, summaries, plots, data tables, and downloads of CSVs, PNGs, and
+self-contained HTML reports. Each browser session retains its own calculation.
+Changing the spectrum day and downloading files reuse the loaded data; changing
+target inputs requires Calculate background. Changed inputs are flagged so an
+older result cannot be mistaken for the edited target. A failed calculation clears
+previous web downloads.
+
+For Streamlit Community Cloud, select this repository and `streamlit_app.py` as
+the entry point. The root `requirements.txt` installs the package and web extra.
+The app needs outbound HTTPS access to the STScI background cache. Deployment is
+optional; both interfaces run locally.
+
 ## Python and notebooks
 
 ```python
@@ -92,10 +147,13 @@ The Bokeh document builder is available as `rbvt.viewer.plot_rbt`.
 ## Development
 
 ```bash
-python -m pip install -e '.[test]'
+python -m pip install -e '.[test,web]'
 python -m pytest
 python -m pip wheel . --no-deps -w dist
 ```
+
+Desktop tests require a display; on headless Linux use `xvfb-run -a python -m pytest`.
+Streamlit tests use its AppTest harness and run without opening a browser.
 
 Tests use synthetic cache files and do not require the remote service. They check
 coordinate handling, scientific-model equivalence, cache mappings, command errors,
